@@ -166,6 +166,7 @@ def create_target_np(all_anchors,
         #     anchors[fg_inds, :], gt_boxes[anchor_to_gt_argmax[fg_inds], :])
         bbox_targets[fg_inds, :] = box_encoding_fn(
             gt_boxes[anchor_to_gt_argmax[fg_inds], :], anchors[fg_inds, :])
+    
     # Bbox regression loss has the form:
     #   loss(x) = weight_outside * L(weight_inside * x)
     # Inside weights allow us to set zero loss on an element-wise basis

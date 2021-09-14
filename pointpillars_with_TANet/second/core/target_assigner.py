@@ -40,7 +40,6 @@ class TargetAssigner:
 
         def box_encoding_fn(boxes, anchors):
             return self._box_coder.encode(boxes, anchors)
-
         return create_target_np(
             anchors,
             gt_boxes,
