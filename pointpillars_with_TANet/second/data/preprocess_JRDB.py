@@ -267,6 +267,7 @@ def prep_pointcloud(input_dict,
         unmatched_thresholds = ret["unmatched_thresholds"]
         anchors_bv = box_np_ops_JRDB.rbbox2d_to_near_bbox(
             anchors[:, [0, 1, 3, 4, 6]])
+    
     example["anchors"] = anchors
     # print("debug", anchors.shape, matched_thresholds.shape)
     # anchors_bv = anchors_bv.reshape([-1, 4])
@@ -307,7 +308,7 @@ def prep_pointcloud(input_dict,
     return example
 
 
-def _read_and_prep_v9(info, root_path, num_point_features, prep_func):
+def _read_and_prep_v9(info, root_path, num_point_features, prep_func, bev_target=None):
     """read data from KITTI-format infos, then call prep function.
     """
     # velodyne_path = str(pathlib.Path(root_path) / info['velodyne_path'])
@@ -354,7 +355,11 @@ def _read_and_prep_v9(info, root_path, num_point_features, prep_func):
         # we need other objects to avoid collision when sample
         annos = kitti.remove_dontcare(annos)
         loc = annos["location"]
-        dims = annos["dimensions"]
+        if bev_target == None:
+            dims = annos["dimensions"]
+        elif bev_target == True:
+            dims = annos["dimensions"]
+            dims[:,2] = dims[:,0] # make square box (width = length)
         rots = annos["rotation_y"]
         gt_names = annos["name"]
         # print(gt_names, len(loc))

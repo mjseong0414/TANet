@@ -8,7 +8,7 @@ import numpy as np
 from second.core import box_np_ops
 from second.core import preprocess as prep
 from second.data import kitti_common as kitti
-from second.data.preprocess_JRDB import _read_and_prep_v9
+from second.data.preprocess_JRDB_BEV import _read_and_prep_v9
 
 
 class Dataset(object):
@@ -28,14 +28,13 @@ class Dataset(object):
 
 class JRDBDataset(Dataset):
     def __init__(self, info_path, root_path, num_point_features,
-                 target_assigner, feature_map_size, prep_func, bev_target=None):
+                 target_assigner, feature_map_size, prep_func):
         with open(info_path, 'rb') as f:
             infos = pickle.load(f)
         #self._kitti_infos = kitti.filter_infos_by_used_classes(infos, class_names)
         self._root_path = root_path
         self._kitti_infos = infos
         self._num_point_features = num_point_features
-        self._bev_target = bev_target
         print("remain number of infos:", len(self._kitti_infos))
         # generate anchors cache
         # [352, 400]
@@ -63,16 +62,8 @@ class JRDBDataset(Dataset):
 
     def __getitem__(self, idx):
         # 여기서 kitti_info파일이 수정돼서 학습에 사용됨
-        if self._bev_target == None:
-            return _read_and_prep_v9(
-                info=self._kitti_infos[idx],
-                root_path=self._root_path,
-                num_point_features=self._num_point_features,
-                prep_func=self._prep_func)
-        elif self._bev_target == True:
-            return _read_and_prep_v9(
-                info=self._kitti_infos[idx],
-                root_path=self._root_path,
-                num_point_features=self._num_point_features,
-                prep_func=self._prep_func,
-                bev_target=self._bev_target)
+        return _read_and_prep_v9(
+            info=self._kitti_infos[idx],
+            root_path=self._root_path,
+            num_point_features=self._num_point_features,
+            prep_func=self._prep_func)
