@@ -34,7 +34,8 @@ def build(input_reader_config,
           model_config,
           training,
           voxel_generator,
-          target_assigner=None):
+          target_assigner=None,
+          bev_target=None):
     """Builds a tensor dictionary based on the InputReader config.
 
     Args:
@@ -112,12 +113,22 @@ def build(input_reader_config,
         remove_environment=cfg.remove_environment,
         use_group_id=cfg.use_group_id,
         out_size_factor=out_size_factor)
-    dataset = JRDBDataset(
-        info_path=cfg.kitti_info_path,
-        root_path=cfg.kitti_root_path,
-        num_point_features=num_point_features,
-        target_assigner=target_assigner,
-        feature_map_size=feature_map_size,
-        prep_func=prep_func)
+    if bev_target == None:
+        dataset = JRDBDataset(
+            info_path=cfg.kitti_info_path,
+            root_path=cfg.kitti_root_path,
+            num_point_features=num_point_features,
+            target_assigner=target_assigner,
+            feature_map_size=feature_map_size,
+            prep_func=prep_func)
+    elif bev_target == True:
+        dataset = JRDBDataset(
+            info_path=cfg.kitti_info_path,
+            root_path=cfg.kitti_root_path,
+            num_point_features=num_point_features,
+            target_assigner=target_assigner,
+            feature_map_size=feature_map_size,
+            prep_func=prep_func,
+            bev_target = bev_target)
         
     return dataset
