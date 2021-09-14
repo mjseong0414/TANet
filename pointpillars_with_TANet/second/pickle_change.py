@@ -1,6 +1,6 @@
 import pickle
 import sys
-sys.path.append("/home/minjae/TANet/pointpillars_with_TANet/second/data/")
+sys.path.append("/mnt/sdb/minjae/TANet/pointpillars_with_TANet/")
 
 f = open("/home/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/JRDB_to_kitti_infos_train_origin.pkl", 'rb')
 data = pickle.load(f)
