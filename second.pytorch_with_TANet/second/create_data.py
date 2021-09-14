@@ -1,5 +1,4 @@
 import sys
-sys.path.append("/home/minjae/TANet/second.pytorch_with_TANet/")
 
 import copy
 from pathlib import Path

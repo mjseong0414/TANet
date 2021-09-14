@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/spalab/jrdb_3dteam/TANet/pointpillars_with_TANet/")
+sys.path.append("/mnt/sdb/minjae/TANet/pointpillars_with_TANet/")
 import os
 import pathlib
 import pickle

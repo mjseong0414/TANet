@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/spalab/jrdb_3dteam/TANet/pointpillars_with_TANet/")
+sys.path.append("/mnt/sdb/minjae/TANet/pointpillars_with_TANet/")
 import os
 import pathlib
 import pickle
@@ -91,7 +91,8 @@ def train(config_path,
           display_step=50,
           summary_step=5,
           pickle_result=True,
-          refine_weight = 2):
+          refine_weight = 2,
+          bev_target=None):
     """train a VoxelNet model specified by a config file.
     """
     if create_folder:
@@ -172,13 +173,15 @@ def train(config_path,
         model_cfg,
         training=True,
         voxel_generator=voxel_generator,
-        target_assigner=target_assigner)
+        target_assigner=target_assigner,
+        bev_target=bev_target)
     eval_dataset = input_reader_builder_JRDB.build(
         eval_input_cfg,
         model_cfg,
         training=False,
         voxel_generator=voxel_generator,
-        target_assigner=target_assigner)
+        target_assigner=target_assigner,
+        bev_target=bev_target)
     def _worker_init_fn(worker_id):
         time_seed = np.array(time.time(), dtype=np.int32)
         np.random.seed(time_seed + worker_id)
@@ -239,6 +242,7 @@ def train(config_path,
                     example = next(data_iter)
                 example_torch = example_convert_to_torch(example, float_dtype)
                 batch_size = example["anchors"].shape[0]
+                # import pdb; pdb.set_trace()
                 ret_dict = net(example_torch, refine_weight)
                 
                 # box_preds = ret_dict["box_preds"]
@@ -785,7 +789,8 @@ def evaluateV2(config_path,
              predict_test=False,
              ckpt_path=None,
              ref_detfile=None,
-             pickle_result=True):
+             pickle_result=True,
+             log_txt = None):
     model_dir = pathlib.Path(model_dir)
     if predict_test:
         result_name = 'predict_test'
@@ -823,7 +828,7 @@ def evaluateV2(config_path,
 
     # fill in the text
     # log_path = model_dir / 'log_evaluate.txt'
-    log_path = './Model_Path/Coarse_freeze_ExeceptObjectNoise' + '/log_evaluate.txt'
+    log_path = model_dir +'/'+ log_txt
     logf = open(log_path, 'a')
     logf.write("################################## Start ################################\n")
     logf.close()

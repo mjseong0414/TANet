@@ -1,7 +1,8 @@
 import pickle
 import numpy as np
 
-pickle_name = "/home/spalab/jrdb_3dteam/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/JRDB_train.pkl"
+# pickle_name = "/home/spalab/jrdb_3dteam/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/JRDB_train.pkl"
+pickle_name = "./dim_pickle.pkl"
 
 
 # nps = np.array([473., 254.,  16., 363., 187.,  97., 563.,  71., 311., 215.,  16.,
@@ -13,6 +14,7 @@ pickle_name = "/home/spalab/jrdb_3dteam/TANet/pointpillars_with_TANet/second/dat
 with open(pickle_name, "rb") as f:
     data_val = pickle.load(f)
 
+data_val[:,2] = data_val[:,0]
 import pdb; pdb.set_trace()
 # invalid_gt_val = 0
 # for i in range(len(data_val)):

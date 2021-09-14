@@ -546,7 +546,8 @@ class VoxelNet(nn.Module):
                  cls_loss_ftor=None,
                  voxel_size=(0.16, 0.16, 9),   #(0.2, 0.2, 4)
                  pc_range=(-25, -25, -3, 25, 25, 6), #(0, -40, -3, 70.4, 40, 1)
-                 name='voxelnet'):
+                 name='voxelnet',
+                 bev_target = None):
         super().__init__()
         self.name = name
         self._num_class = num_class

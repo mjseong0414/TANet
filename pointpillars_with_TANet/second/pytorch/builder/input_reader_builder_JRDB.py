@@ -50,7 +50,8 @@ def build(input_reader_config,
           model_config,
           training,
           voxel_generator,
-          target_assigner=None) -> DatasetWrapper:
+          target_assigner=None,
+          bev_target=None) -> DatasetWrapper:
     """Builds a tensor dictionary based on the InputReader config.
 
     Args:
@@ -66,7 +67,11 @@ def build(input_reader_config,
     if not isinstance(input_reader_config, input_reader_pb2.InputReader):
         raise ValueError('input_reader_config not of type '
                          'input_reader_pb2.InputReader.')
-    dataset = dataset_builder_JRDB.build(input_reader_config, model_config,
-                                    training, voxel_generator, target_assigner)
+    if bev_target == None:
+        dataset = dataset_builder_JRDB.build(input_reader_config, model_config,
+                                        training, voxel_generator, target_assigner)
+    elif bev_target == True:
+        dataset = dataset_builder_JRDB.build(input_reader_config, model_config,
+                                        training, voxel_generator, target_assigner, bev_target)
     dataset = DatasetWrapper(dataset)
     return dataset

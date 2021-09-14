@@ -164,6 +164,7 @@ class WeightedSmoothL1LocalizationLoss(Loss):
     else:
       self._code_weights = None
     self._codewise = codewise
+
   def _compute_loss(self, prediction_tensor, target_tensor, weights=None):
     """Compute loss function.
 
