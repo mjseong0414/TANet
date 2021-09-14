@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=2 python ./pytorch/train_JRDB.py train --config_path=./configs/tanet/ped_cycle/base_0to15_fully_severly.proto --model_dir=./Model_Path/experiment_0to15_fully_severly  --refine_weight 2

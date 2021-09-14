@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python ./pytorch/train_JRDB.py evaluate --config_path=./configs/tanet/ped_cycle/base_0to15_fully_severly.proto --model_dir=./Model_Path/experiment_0to15_fully_severly
