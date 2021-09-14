@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append("/mnt/sdb/jrdb_3dteam/TANet/pointpillars_with_TANet/")
+sys.path.append("/mnt/sdb/minjae/TANet/pointpillars_with_TANet/")
 import copy
 import pathlib
 import pickle
@@ -71,12 +71,12 @@ def create_kitti_info_file(data_path,
     data_path = "./data"
     target_train_img_ids = "/JRDB_to_KITTI/ImageSets/train.txt"
     target_val_img_ids = "/JRDB_to_KITTI/ImageSets/val.txt"
-    target_train_pickle_name = "train_15_10_15_out_fully_severly.pkl"
-    target_val_pickle_name = "val_15_10_15_out_fully_severly.pkl"
+    target_train_pickle_name = "train_new.pkl"
+    target_val_pickle_name = "val_new.pkl"
     #target_train_pickle_name = "train_0to15_out_fully.pkl"
     #target_val_pickle_name = "val_0to15_out_fully.pkl"
 
-
+    import pdb; pdb.set_trace()
     print(sys.path)
     print(os.getcwd())
     train_img_ids = _read_imageset_file(data_path + target_train_img_ids)#

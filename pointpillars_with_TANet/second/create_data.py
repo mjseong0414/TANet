@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/minjae/TANet/pointpillars_with_TANet/")
+sys.path.append("/mnt/sdb/minjae/TANet/pointpillars_with_TANet/")
 import copy
 import pathlib
 import pickle

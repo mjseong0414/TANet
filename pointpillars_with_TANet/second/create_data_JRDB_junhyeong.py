@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/minjae/TANet/pointpillars_with_TANet/")
+sys.path.append("/mnt/sdb/minjae/TANet/pointpillars_with_TANet/")
 import copy
 import pathlib
 import pickle
@@ -9,7 +9,7 @@ import numpy as np
 from skimage import io as imgio
 
 import sys
-sys.path.append("/TANet/pointpillars_with_TANet")
+sys.path.append("/mnt/sdb/minjae/TANet/pointpillars_with_TANet")
 
 from second.core import box_np_ops
 from second.core.point_cloud.point_cloud_ops import bound_points_jit
