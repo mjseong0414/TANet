@@ -8,7 +8,7 @@ from collections import OrderedDict
 import numpy as np
 from skimage import io
 
-target_label_name = 'label_15_from_10_to_15_out_fully_severly'
+target_label_name = 'label_2'
 
 def area(boxes, add1=False):
     """Computes area of boxes.
