@@ -121,7 +121,7 @@ def build(input_reader_config,
             target_assigner=target_assigner,
             feature_map_size=feature_map_size,
             prep_func=prep_func)
-    elif bev_target == True:
+    elif bev_target == 'rectangle' or 'center':
         dataset = JRDBDataset(
             info_path=cfg.kitti_info_path,
             root_path=cfg.kitti_root_path,

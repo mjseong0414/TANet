@@ -360,7 +360,6 @@ def calculate_iou_partly(gt_annos, dt_annos, metric, num_parts=50):
     total_dt_num = np.stack([len(a["name"]) for a in dt_annos], 0)
     total_gt_num = np.stack([len(a["name"]) for a in gt_annos], 0)
     num_examples = len(gt_annos)
-    num_parts = 150
     split_parts = get_split_parts(num_examples, num_parts)
     parted_overlaps = []
     example_idx = 0
@@ -577,10 +576,10 @@ def eval_class_v3(gt_annos,
         dict of recall, precision and aos
     """
     num_parts = 150
+    # num_parts = 1
     assert len(gt_annos) == len(dt_annos)
     num_examples = len(gt_annos)
     split_parts = get_split_parts(num_examples, num_parts)
-
     rets = calculate_iou_partly(dt_annos, gt_annos, metric, num_parts)
     overlaps, parted_overlaps, total_dt_num, total_gt_num = rets
     N_SAMPLE_PTS = 41
@@ -700,7 +699,8 @@ def do_eval_v2(gt_annos,
                current_classes,
                min_overlaps,
                compute_aos=False,
-               difficultys = [0, 1, 2]):
+               difficultys = [0, 1, 2],
+               bev_target=None):
     # min_overlaps: [num_minoverlap, metric, num_class]
     # ret = eval_class_v3(gt_annos, dt_annos, current_classes, difficultys, 0,
     #                     min_overlaps, compute_aos)
@@ -709,13 +709,19 @@ def do_eval_v2(gt_annos,
     # mAP_aos = None
     # if compute_aos:
     #     mAP_aos = get_mAP_v2(ret["orientation"])
-    ret = eval_class_v3(gt_annos, dt_annos, current_classes, difficultys, 1,
-                        min_overlaps)
-    mAP_bev = get_mAP_v2(ret["precision"])
-    ret = eval_class_v3(gt_annos, dt_annos, current_classes, difficultys, 2,
-                        min_overlaps)
-    mAP_3d = get_mAP_v2(ret["precision"])
-    return mAP_bev, mAP_3d
+    if bev_target == None:
+        ret = eval_class_v3(gt_annos, dt_annos, current_classes, difficultys, 1,
+                            min_overlaps)
+        mAP_bev = get_mAP_v2(ret["precision"])
+        ret = eval_class_v3(gt_annos, dt_annos, current_classes, difficultys, 2,
+                            min_overlaps)
+        mAP_3d = get_mAP_v2(ret["precision"])
+        return mAP_bev, mAP_3d
+    elif bev_target == 'rectangle':
+        ret = eval_class_v3(gt_annos, dt_annos, current_classes, difficultys, 1,
+                            min_overlaps)
+        mAP_bev = get_mAP_v2(ret["precision"])
+        return mAP_bev
 
 
 def do_coco_style_eval(gt_annos, dt_annos, current_classes, overlap_ranges,
@@ -796,7 +802,7 @@ def get_official_eval_result_v1(gt_annos, dt_annos, current_class):
     return result
 
 
-def get_official_eval_result(gt_annos, dt_annos, current_classes, difficultys=[0, 1, 2], return_data=False):
+def get_official_eval_result(gt_annos, dt_annos, current_classes, difficultys=[0, 1, 2], return_data=False, bev_target = None):
     overlap_0_7 = np.array([[0.7, 0.5, 0.5, 0.7, 0.5, 0.7, 0.7, 0.7],
                             [0.7, 0.5, 0.5, 0.7, 0.5, 0.7, 0.7, 0.7],
                             [0.7, 0.5, 0.5, 0.7, 0.5, 0.7, 0.7, 0.7]])
@@ -836,8 +842,13 @@ def get_official_eval_result(gt_annos, dt_annos, current_classes, difficultys=[0
             if anno['alpha'][0] != -10:
                 compute_aos = True
             break
-    mAPbev, mAP3d = do_eval_v2(
-        gt_annos, dt_annos, current_classes, min_overlaps, compute_aos, difficultys)
+    if bev_target == None:
+        mAPbev, mAP3d = do_eval_v2(
+            gt_annos, dt_annos, current_classes, min_overlaps, compute_aos, difficultys)
+    elif bev_target == 'rectangle':
+        mAPbev = do_eval_v2(
+            gt_annos, dt_annos, current_classes, min_overlaps, compute_aos, difficultys, bev_target = bev_target)
+
     for j, curcls in enumerate(current_classes):
         # mAP threshold array: [num_minoverlap, metric, class]
         # mAP result: [num_class, num_diff, num_minoverlap]
@@ -848,12 +859,17 @@ def get_official_eval_result(gt_annos, dt_annos, current_classes, difficultys=[0
             # result += print_str((f"bbox AP:{mAPbbox[j, 0, i]:.2f}, "
             #                      f"{mAPbbox[j, 1, i]:.2f}, "
             #                      f"{mAPbbox[j, 2, i]:.2f}"))
-            result += print_str((f"bev  AP:{mAPbev[j, 0, i]:.2f}, "
-                                 f"{mAPbev[j, 1, i]:.2f}, "
-                                 f"{mAPbev[j, 2, i]:.2f}"))
-            result += print_str((f"3d   AP:{mAP3d[j, 0, i]:.2f}, "
-                                 f"{mAP3d[j, 1, i]:.2f}, "
-                                 f"{mAP3d[j, 2, i]:.2f}"))
+            if bev_target == None:
+                result += print_str((f"bev  AP:{mAPbev[j, 0, i]:.2f}, "
+                                    f"{mAPbev[j, 1, i]:.2f}, "
+                                    f"{mAPbev[j, 2, i]:.2f}"))
+                result += print_str((f"3d   AP:{mAP3d[j, 0, i]:.2f}, "
+                                    f"{mAP3d[j, 1, i]:.2f}, "
+                                    f"{mAP3d[j, 2, i]:.2f}"))
+            elif bev_target == 'rectangle':
+                result += print_str((f"bev  AP:{mAPbev[j, 0, i]:.2f}, "
+                                    f"{mAPbev[j, 1, i]:.2f}, "
+                                    f"{mAPbev[j, 2, i]:.2f}"))
             # if compute_aos:
             #     result += print_str((f"aos  AP:{mAPaos[j, 0, i]:.2f}, "
             #                          f"{mAPaos[j, 1, i]:.2f}, "

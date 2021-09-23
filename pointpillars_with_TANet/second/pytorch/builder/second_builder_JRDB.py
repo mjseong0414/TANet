@@ -21,7 +21,7 @@ from second.pytorch.models.voxelnet_JRDB import LossNormType, VoxelNet
 
 
 def build(model_cfg: second_pb2.VoxelNet, voxel_generator,
-          target_assigner) -> VoxelNet:
+          target_assigner, bev_target=None) -> VoxelNet:
     """build second pytorch instance.
     """
     if not isinstance(model_cfg, second_pb2.VoxelNet):
@@ -41,7 +41,6 @@ def build(model_cfg: second_pb2.VoxelNet, voxel_generator,
         2: LossNormType.NormByNumPosNeg,
     }
     loss_norm_type = loss_norm_type_dict[model_cfg.loss_norm_type]
-
     losses = losses_builder.build(model_cfg.loss)
     encode_rad_error_by_sin = model_cfg.encode_rad_error_by_sin
     cls_loss_ftor, loc_loss_ftor, cls_weight, loc_weight, _ = losses
@@ -90,6 +89,7 @@ def build(model_cfg: second_pb2.VoxelNet, voxel_generator,
         cls_loss_ftor=cls_loss_ftor,
         target_assigner=target_assigner,
         voxel_size=voxel_generator.voxel_size,
-        pc_range=voxel_generator.point_cloud_range
+        pc_range=voxel_generator.point_cloud_range,
+        bev_target=bev_target
     )
     return net

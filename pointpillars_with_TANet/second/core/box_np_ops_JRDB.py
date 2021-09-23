@@ -167,6 +167,69 @@ def bev_box_decode(box_encodings, anchors, encode_angle_to_vector=False, smooth_
         rg = rt + ra
     return np.concatenate([xg, yg, wg, lg, rg], axis=-1)
 
+def center_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_dim=False):
+    """box encode for VoxelNet in lidar
+    Args:
+        boxes ([N, 7] Tensor): normal boxes: x, y, z, w, l, h, r
+        anchors ([N, 7] Tensor): anchors
+        encode_angle_to_vector: bool. increase aos performance, 
+            decrease other performance.
+    """
+    # need to convert boxes to z-center format
+    # loss function을 어떻게 짜야할 지 고민해봐야 함...!!!
+    xa, ya, ra = np.split(anchors, 3, axis=-1)
+    xg, yg, rg = np.split(boxes, 3, axis=-1)
+    xt = (xg - xa)
+    yt = (yg - ya)
+    # if smooth_dim:
+    #     lt = lg / la - 1
+    #     wt = wg / wa - 1
+    # else:
+    #     lt = np.log(lg / la)
+    #     wt = np.log(wg / wa)
+    if encode_angle_to_vector:
+        rgx = np.cos(rg)
+        rgy = np.sin(rg)
+        rax = np.cos(ra)
+        ray = np.sin(ra)
+        rtx = rgx - rax
+        rty = rgy - ray
+        return np.concatenate([xt, yt, rtx, rty], axis=-1)
+    else:
+        rt = rg - ra
+        return np.concatenate([xt, yt, rt], axis=-1)
+
+
+def center_box_decode(box_encodings, anchors, encode_angle_to_vector=False, smooth_dim=False):
+    """box decode for VoxelNet in lidar
+    Args:
+        boxes ([N, 7] Tensor): normal boxes: x, y, z, w, l, h, r
+        anchors ([N, 7] Tensor): anchors
+    """
+    # need to convert box_encodings to z-bottom format
+    xa, ya, ra = np.split(anchors, 3, axis=-1)
+    if encode_angle_to_vector:
+        xt, yt, rtx, rty = np.split(box_encodings, 4, axis=-1)
+    else:
+        xt, yt, rt = np.split(box_encodings, 3, axis=-1)
+    xg = xt + xa
+    yg = yt + ya
+    # if smooth_dim:
+    #     lg = (lt + 1) * la
+    #     wg = (wt + 1) * wa
+    # else:
+    #     lg = np.exp(lt) * la
+    #     wg = np.exp(wt) * wa
+    if encode_angle_to_vector:
+        rax = np.cos(ra)
+        ray = np.sin(ra)
+        rgx = rtx + rax
+        rgy = rty + ray
+        rg = np.arctan2(rgy, rgx)
+    else:
+        rg = rt + ra
+    return np.concatenate([xg, yg, rg], axis=-1)
+
 def corners_nd(dims, origin=0.5):
     """generate relative box corners based on length per dim and
     origin point. 

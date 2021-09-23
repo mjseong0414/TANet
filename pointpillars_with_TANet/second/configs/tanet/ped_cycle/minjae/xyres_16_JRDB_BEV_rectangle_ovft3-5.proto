@@ -78,9 +78,9 @@ model: {
     target_assigner: {
       anchor_generators: {
         anchor_generator_stride: {
-          sizes: [0.52, 0.93, 1.73] # wlh
+          sizes: [0.93, 0.93, 2.0] # wlh
           strides: [0.16, 0.16, 0.0] # if generate only 1 z_center, z_stride will be ignored
-          offsets: [-24.92, -24.92 , -1.5] # origin_offset + strides / 2 # [0.08, -19.76, -1.465] 
+          offsets: [-24.92, -24.92 , -1.0] # origin_offset + strides / 2 # [0.08, -19.76, -1.465] 
           rotations: [0, 1.57] # 0, pi/2
           matched_threshold : 0.5
           unmatched_threshold : 0.35
@@ -120,7 +120,7 @@ train_input_reader: {
   
   remove_unknown_examples: false
   remove_environment: false
-  kitti_info_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/train_new.pkl"
+  kitti_info_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/overfitting.pkl"
   kitti_root_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/"
 }
 
@@ -142,8 +142,8 @@ train_config: {
   }
   inter_op_parallelism_threads: 4
   intra_op_parallelism_threads: 4
-  steps: 108720         # kitti is 371200
-  steps_per_eval: 108720 # 21744 steps per epoch * 5 epoch
+  steps: 2000         # kitti is 371200
+  steps_per_eval: 2000 # 21744 steps per epoch * 5 epoch
   save_checkpoints_secs : 1800 # half hour
   save_summary_steps : 10
   enable_mixed_precision: false
@@ -162,6 +162,6 @@ eval_input_reader: {
   num_workers: 1 # 3
   anchor_area_threshold: 1
   remove_environment: false
-  kitti_info_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/val_new.pkl"
+  kitti_info_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/overfitting.pkl"
   kitti_root_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/"
 }

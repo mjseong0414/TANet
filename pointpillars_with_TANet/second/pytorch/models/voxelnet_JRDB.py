@@ -580,6 +580,7 @@ class VoxelNet(nn.Module):
         self._direction_loss_weight = direction_loss_weight
         self._cls_loss_weight = cls_loss_weight
         self._loc_loss_weight = loc_loss_weight
+        self._bev_target = bev_target
 
         vfe_class_dict = {
             "VoxelFeatureExtractor": VoxelFeatureExtractor,
@@ -877,11 +878,14 @@ class VoxelNet(nn.Module):
         for box_preds, cls_preds, dir_preds, img_idx, a_mask in zip(
                 batch_box_preds, batch_cls_preds, batch_dir_preds, batch_imgidx, batch_anchors_mask):
             if a_mask is not None:
-                box_preds = box_preds[a_mask]
-                cls_preds = cls_preds[a_mask]
+                # box_preds = box_preds[a_mask]
+                # cls_preds = cls_preds[a_mask]
+                box_preds = box_preds[torch.as_tensor(a_mask, dtype=bool)] # modify a_mask dtype to bool dtype because of warnning
+                cls_preds = cls_preds[torch.as_tensor(a_mask, dtype=bool)]
             if self._use_direction_classifier:
                 if a_mask is not None:
-                    dir_preds = dir_preds[a_mask]
+                    # dir_preds = dir_preds[a_mask]
+                    dir_preds = dir_preds[torch.as_tensor(a_mask, dtype=bool)]
                 # print(dir_preds.shape)
                 dir_labels = torch.max(dir_preds, dim=-1)[1]
             if self._encode_background_as_zeros:
@@ -903,7 +907,6 @@ class VoxelNet(nn.Module):
             selected_labels = None
             selected_scores = None
             selected_dir_labels = None
-
             if self._multiclass_nms:
                 # curently only support class-agnostic boxes.
                 boxes_for_nms = box_preds[:, [0, 1, 3, 4, 6]]
@@ -973,7 +976,7 @@ class VoxelNet(nn.Module):
                         top_labels = top_labels[top_scores_keep]
                     boxes_for_nms = box_preds[:, [0, 1, 3, 4, 6]]
                     if not self._use_rotate_nms:
-                        box_preds_corners = box_torch_ops_JRDB.center_to_corner_box2d(
+                        box_preds_corners = box_torch_ops_JRDB.center_to_corner_box2d( # origin값이 사용됨
                             boxes_for_nms[:, :2], boxes_for_nms[:, 2:4],
                             boxes_for_nms[:, 4])
                         boxes_for_nms = box_torch_ops_JRDB.corner_to_standup_nd(
@@ -1078,6 +1081,8 @@ class VoxelNet(nn.Module):
 
         batch_cls_preds = batch_cls_preds.view(batch_size, -1,
                                                num_class_with_bg)
+        # decoding할 때 bev_target을 center도 보내야함5, box_np_ops_JRDB로 가도록 조절
+        import pdb; pdb.set_trace()
         batch_box_preds = self._box_coder.decode_torch(batch_box_preds,
                                                        batch_anchors)
         if self._use_direction_classifier:

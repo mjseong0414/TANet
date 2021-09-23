@@ -92,9 +92,14 @@ def train(config_path,
           summary_step=5,
           pickle_result=True,
           refine_weight = 2,
-          bev_target=None):
+          bev_target=None,
+          l_fixed = None,
+          w_fixed = None):
     """train a VoxelNet model specified by a config file.
     """
+    if bev_target == 'center' and (l_fixed == None or w_fixed == None):
+        raise Exception('You should set l_fixed and w_fixed in .sh file')
+
     if create_folder:
         if pathlib.Path(model_dir).exists():
             model_dir = torchplus.train.create_folder(model_dir)
@@ -125,7 +130,7 @@ def train(config_path,
     # BUILD TARGET ASSIGNER
     ######################
     bv_range = voxel_generator.point_cloud_range[[0, 1, 3, 4]]
-    box_coder = box_coder_builder_JRDB.build(model_cfg.box_coder)
+    box_coder = box_coder_builder_JRDB.build(model_cfg.box_coder, bev_target, l_fixed, w_fixed)
     target_assigner_cfg = model_cfg.target_assigner
     target_assigner = target_assigner_builder_JRDB.build(target_assigner_cfg,
                                                     bv_range, box_coder)
@@ -133,7 +138,7 @@ def train(config_path,
     # BUILD NET
     ######################
     center_limit_range = model_cfg.post_center_limit_range
-    net = second_builder_JRDB.build(model_cfg, voxel_generator, target_assigner)
+    net = second_builder_JRDB.build(model_cfg, voxel_generator, target_assigner, bev_target=bev_target)
     net.cuda()
     # net_train = torch.nn.DataParallel(net).cuda()
     print("num_trainable parameters:", len(list(net.parameters())))
@@ -501,12 +506,13 @@ def comput_kitti_output(predictions_dicts,batch_image_shape,
                 anno["name"].append(class_names[int(label)])
                 anno["truncated"].append(0.0)
                 anno["occluded"].append(0)
-                anno["alpha"].append(-np.arctan2(-box_lidar[1], box_lidar[0]) +
-                                     box[6])
+                # anno["alpha"].append(-np.arctan2(-box_lidar[1], box_lidar[0]) + box[6])
+                anno["alpha"].append(-np.arctan2(-box_lidar[1], box_lidar[0])) # JRDB 형식으로 수정
                 # anno["bbox"].append(bbox)
                 anno["dimensions"].append(box[3:6])
                 anno["location"].append(box[:3])
-                anno["rotation_y"].append(box[6])
+                # anno["rotation_y"].append(box[6])
+                anno["rotation_y"].append(np.pi/2 - box[6]) # JRDB 형식으로 수정
                 if global_set is not None:
                     for i in range(100000):
                         if score in global_set:
@@ -790,7 +796,12 @@ def evaluateV2(config_path,
              ckpt_path=None,
              ref_detfile=None,
              pickle_result=True,
-             log_txt = None):
+             log_txt = None,
+             bev_target = None,
+             l_fixed = None,
+             w_fixed = None):
+    if bev_target == 'center' and (l_fixed == None or w_fixed == None):
+        raise Exception('You should set l_fixed and w_fixed in .sh file')
     model_dir = pathlib.Path(model_dir)
     if predict_test:
         result_name = 'predict_test'
@@ -815,11 +826,12 @@ def evaluateV2(config_path,
     ######################
     voxel_generator = voxel_builder_JRDB.build(model_cfg.voxel_generator)
     bv_range = voxel_generator.point_cloud_range[[0, 1, 3, 4]]
-    box_coder = box_coder_builder_JRDB.build(model_cfg.box_coder)
+    box_coder = box_coder_builder_JRDB.build(model_cfg.box_coder, bev_target, l_fixed, w_fixed)
     target_assigner_cfg = model_cfg.target_assigner
     target_assigner = target_assigner_builder_JRDB.build(target_assigner_cfg,
                                                     bv_range, box_coder)
-    net = second_builder_JRDB.build(model_cfg, voxel_generator, target_assigner)
+    
+    net = second_builder_JRDB.build(model_cfg, voxel_generator, target_assigner, bev_target=bev_target)
     net.cuda()
     if train_cfg.enable_mixed_precision:
         net.half()
@@ -828,7 +840,7 @@ def evaluateV2(config_path,
 
     # fill in the text
     # log_path = model_dir / 'log_evaluate.txt'
-    log_path = model_dir +'/'+ log_txt
+    log_path = str(model_dir) +'/'+ log_txt
     logf = open(log_path, 'a')
     logf.write("################################## Start ################################\n")
     logf.close()
@@ -842,12 +854,14 @@ def evaluateV2(config_path,
         else:
             torchplus.train.restore(ckpt_path, net)
         
+        ############ 차분히 디버깅
         eval_dataset = input_reader_builder_JRDB.build(
             input_cfg,
             model_cfg,
             training=False,
             voxel_generator=voxel_generator,
-            target_assigner=target_assigner)
+            target_assigner=target_assigner,
+            bev_target=bev_target)
         eval_dataloader = torch.utils.data.DataLoader(
             eval_dataset,
             batch_size=input_cfg.batch_size,
@@ -915,6 +929,7 @@ def evaluateV2(config_path,
         # print(f"fps : {len(eval_dataloader)/pure_inference_time} img/s")
         if not predict_test:
             gt_annos = [info["annos"] for info in eval_dataset.dataset.kitti_infos]
+
             if not pickle_result:
                 dt_annos = kitti.get_label_annos(result_path_step)
 
@@ -932,7 +947,10 @@ def evaluateV2(config_path,
                 dt_annos = dt_annos_refine
                 # print(result)
             else:
-                result = get_official_eval_result(gt_annos, dt_annos, class_names)
+                if bev_target == None:
+                    result = get_official_eval_result(gt_annos, dt_annos, class_names)
+                elif bev_target == 'rectangle' or 'center':
+                    result = get_official_eval_result(gt_annos, dt_annos, class_names, bev_target=bev_target)
                 logf.write(result_path_step.stem + '\n')
                 # print(result, file=logf)
                 logf.write(result)
@@ -942,15 +960,15 @@ def evaluateV2(config_path,
             if pickle_result:
                 #refine pickle dump
                 if model_cfg.rpn.module_class_name == "PSA" or model_cfg.rpn.module_class_name == "RefineDet":
-                    with open(result_path_step / "result_refine.txt", 'wb') as f:
+                    with open(result_path_step / "result_refine.pkl", 'wb') as f:
                         pickle.dump(dt_annos_refine, f)
                 
                     #coarse pickle dump
-                    with open(result_path_step / "result_coarse.txt", 'wb') as f:
+                    with open(result_path_step / "result_coarse.pkl", 'wb') as f:
                         pickle.dump(dt_annos_coarse, f)
                                 
                 else :
-                    with open(result_path_step / "result_coarse.txt", 'wb') as f:
+                    with open(result_path_step / "result_coarse.pkl", 'wb') as f:
                         pickle.dump(dt_annos, f)
 
         logf.write("\n##################################################################\n")

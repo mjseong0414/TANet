@@ -70,7 +70,7 @@ def build(input_reader_config,
     if bev_target == None:
         dataset = dataset_builder_JRDB.build(input_reader_config, model_config,
                                         training, voxel_generator, target_assigner)
-    elif bev_target == True:
+    elif bev_target == 'rectangle' or 'center':
         dataset = dataset_builder_JRDB.build(input_reader_config, model_config,
                                         training, voxel_generator, target_assigner, bev_target)
     dataset = DatasetWrapper(dataset)

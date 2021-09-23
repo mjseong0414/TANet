@@ -207,6 +207,7 @@ def prep_pointcloud(input_dict,
             group_ids = group_ids[gt_boxes_mask]
         gt_classes = np.array([class_names.index(n) + 1 for n in gt_names], dtype=np.int32)
         
+        """
         # overfitting experiments parts...
         gt_boxes, points = prep.random_flip(gt_boxes, points)
 
@@ -229,6 +230,7 @@ def prep_pointcloud(input_dict,
         # limit rad to [-pi, pi]
         gt_boxes[:, 6] = box_np_ops_JRDB.limit_period(
             gt_boxes[:, 6], offset=0.5, period=2 * np.pi)
+        """
         
         
 
@@ -354,12 +356,24 @@ def _read_and_prep_v9(info, root_path, num_point_features, prep_func, bev_target
         annos = info['annos']
         # we need other objects to avoid collision when sample
         annos = kitti.remove_dontcare(annos)
-        loc = annos["location"]
+        
         if bev_target == None:
+            loc = annos["location"]
+            dims = annos["dimensions"] # lhw
+        elif bev_target == 'rectangle':
+            loc = annos["location"]
+            # loc[:,1] = 0 # y = 0 (camera coordinates)
             dims = annos["dimensions"]
-        elif bev_target == True:
+            # dims[:,2] = dims[:,0] # make large square box (width에 length를 대입)
+            dims[:,0] = dims[:,2] # make small square box (length에 width를 대입)
+            # dims[:,1] = dims[:,2] # (height에 width를 대입)
+            # dims[:,1] = 0.0 # remove height (bev에서 height신경 안쓰니까 지워보자)
+        elif bev_target == 'center':
+            loc = annos["location"]
+            # loc[:,1] = 0 # y = 0 (camera coordinates)
             dims = annos["dimensions"]
-            dims[:,2] = dims[:,0] # make square box (width = length)
+            dims[:,0] = dims[:,2] # make small square box (length에 width를 대입)
+            # dims[:,:] = 0.0
         rots = annos["rotation_y"]
         gt_names = annos["name"]
         # print(gt_names, len(loc))

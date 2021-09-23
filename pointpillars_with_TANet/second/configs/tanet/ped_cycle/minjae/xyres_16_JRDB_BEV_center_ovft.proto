@@ -36,7 +36,7 @@ model: {
       localization_loss: {
         weighted_smooth_l1: {
           sigma: 3.0
-          code_weight: [1.0, 1.0, 1.0, 1.0, 1.0]
+          code_weight: [1.0, 1.0, 1.0]
         }
       }
       classification_weight: 1.0
@@ -120,7 +120,7 @@ train_input_reader: {
   
   remove_unknown_examples: false
   remove_environment: false
-  kitti_info_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/train_new.pkl"
+  kitti_info_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/overfitting.pkl"
   kitti_root_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/"
 }
 
@@ -142,8 +142,8 @@ train_config: {
   }
   inter_op_parallelism_threads: 4
   intra_op_parallelism_threads: 4
-  steps: 108720         # kitti is 371200
-  steps_per_eval: 108720 # 21744 steps per epoch * 5 epoch
+  steps: 2000         # kitti is 371200
+  steps_per_eval: 2000 # 21744 steps per epoch * 5 epoch
   save_checkpoints_secs : 1800 # half hour
   save_summary_steps : 10
   enable_mixed_precision: false
@@ -154,7 +154,7 @@ train_config: {
 eval_input_reader: {
   record_file_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/kitti_val.tfrecord"
   class_names: ["Pedestrian"]
-  batch_size: 2 # 2
+  batch_size: 4 # 2
   max_num_epochs : 160
   prefetch_size : 25
   max_number_of_voxels: 9000
@@ -162,6 +162,6 @@ eval_input_reader: {
   num_workers: 1 # 3
   anchor_area_threshold: 1
   remove_environment: false
-  kitti_info_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/val_new.pkl"
+  kitti_info_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/data/JRDB_to_KITTI/overfitting.pkl"
   kitti_root_path: "/mnt/sdb/minjae/TANet/pointpillars_with_TANet/second/"
 }

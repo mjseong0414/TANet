@@ -78,7 +78,7 @@ model: {
     target_assigner: {
       anchor_generators: {
         anchor_generator_stride: {
-          sizes: [0.52, 0.93, 1.73] # wlh
+          sizes: [0.52, 0.52, 1.73] # wlh
           strides: [0.16, 0.16, 0.0] # if generate only 1 z_center, z_stride will be ignored
           offsets: [-24.92, -24.92 , -1.5] # origin_offset + strides / 2 # [0.08, -19.76, -1.465] 
           rotations: [0, 1.57] # 0, pi/2

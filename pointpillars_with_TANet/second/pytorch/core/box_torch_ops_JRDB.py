@@ -159,6 +159,70 @@ def bev_box_decode(box_encodings, anchors, encode_angle_to_vector=False, smooth_
         rg = rt + ra
     return torch.cat([xg, yg, wg, lg, rg], dim=-1)
 
+def center_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_dim=False):
+    """box encode for VoxelNet
+    Args:
+        boxes ([N, 7] Tensor): normal boxes: x, y, z, l, w, h, r
+        anchors ([N, 7] Tensor): anchors
+    """
+    xa, ya, ra = torch.split(anchors, 1, dim=-1)
+    xg, yg, rg = torch.split(boxes, 1, dim=-1)
+    xt = (xg - xa)
+    yt = (yg - ya)
+    # if smooth_dim:
+    #     lt = lg / la - 1
+    #     wt = wg / wa - 1
+    # else:
+    #     lt = torch.log(lg / la)
+    #     wt = torch.log(wg / wa)
+    if encode_angle_to_vector:
+        rgx = torch.cos(rg)
+        rgy = torch.sin(rg)
+        rax = torch.cos(ra)
+        ray = torch.sin(ra)
+        rtx = rgx - rax
+        rty = rgy - ray
+        return torch.cat([xt, yt, rtx, rty], dim=-1)
+    else:
+        rt = rg - ra
+        return torch.cat([xt, yt, rt], dim=-1)
+
+    # rt = rg - ra
+    # return torch.cat([xt, yt, zt, wt, lt, ht, rt], dim=-1)
+
+
+def center_box_decode(box_encodings, anchors, encode_angle_to_vector=False, smooth_dim=False):
+    """box decode for VoxelNet in lidar
+    Args:
+        boxes ([N, 7] Tensor): normal boxes: x, y, z, w, l, h, r
+        anchors ([N, 7] Tensor): anchors
+    """
+    xa, ya, ra = torch.split(anchors, 1, dim=-1)
+    if encode_angle_to_vector:
+        xt, yt, rtx, rty = torch.split(
+            box_encodings, 1, dim=-1)
+
+    else:
+        xt, yt, rt = torch.split(box_encodings, 1, dim=-1)
+
+    # xt, yt, zt, wt, lt, ht, rt = torch.split(box_encodings, 1, dim=-1)
+    xg = xt  + xa
+    yg = yt  + ya
+    # if smooth_dim:
+    #     lg = (lt + 1) * la
+    #     wg = (wt + 1) * wa
+    # else:
+    #     lg = torch.exp(lt) * la
+    #     wg = torch.exp(wt) * wa
+    if encode_angle_to_vector:
+        rax = torch.cos(ra)
+        ray = torch.sin(ra)
+        rgx = rtx + rax
+        rgy = rty + ray
+        rg = torch.atan2(rgy, rgx)
+    else:
+        rg = rt + ra
+    return torch.cat([xg, yg, rg], dim=-1)
 
 def corners_nd(dims, origin=0.5):
     """generate relative box corners based on length per dim and
